@@ -1,4 +1,4 @@
-### Local-adaptation-in-sugar-maple
+# Local-adaptation-in-sugar-maple
 
 Workflow for detection of adaptive genetic variation associated with climate related synthetic variables in 24 natural populations of sugar maple (Acer saccharum Marshall) (N=641 individuals). 
 
@@ -15,16 +15,16 @@ Replicates.txt should have the same format of the provided example.
 Output of the script is a count of diffences in genotypes for each pair of replicates that you can use to calculate genotyping error rate per pairs of replicates par MAF values (diff_count/total number of SNPs)
 
 ## Filtering steps toward clean data set of SNPs
-# First round of filters and pruning
+### First round of filters and pruning
 Filters SNPs according to depth, missing data and MAF then pruns SNPs for linkage desequilibirum (LD)
 Run filters_pruning.sh : bash path/to/input.vcf path/to/output_directory
-# Create VCF of filtered and pruned SNPs 
+### Create VCF of filtered and pruned SNPs 
 Last step of filters_pruning.sh produces a bed file containing informations on genetoyprs of individuals for SNPs remaining after pruning. SNPs are listed into the associated .bim file. 
 Next steps are filters on the VCF file of pruned positions. To create this VCF we need to extract pruned positions of VCF outputed by filters_pruning.sh.
 To do so, create a "pruned_positions_data.txt" listing pruned SNPs in two tab-separated columns, no header : CHROM  POS. Make sure that CHROM are numbered/designated as in the VCF as plink renamed them during pruning.
 Then use VCFTOOLS to extract pruned positions : 
 vcftools --vcf filtered.vcf --positions pruned_positions_data.txt --out filtered.pruned --recode --remove-filtered-all
-# Second round of filtering on pruned SNPs
+### Second round of filtering on pruned SNPs
 The second round of filtering consists in : i) removing replicated individuals that were used for calculating genotyping error rates, ii) removing SNPs suspected of paralogy,  iii) removing individuals suspected to be clones.
   i) We are keeping one replicate out of two, the one with less missing data. So get missing data from filtered.pruned.vcf created in precedent step.  
   vcftools --vcf filtered.pruned.vcf --missing-indv --out filtered.pruned
@@ -41,21 +41,21 @@ The second round of filtering consists in : i) removing replicated individuals t
   vcftools --vcf filtered.pruned.norep.nohet.recode.vcf --remove clones.txt --out filtered.pruned.norep.nohet.noclones --recode --remove-filtered-all
 
 ## Output final datasets (filtered.pruned.norep.nohet.noclones.vcf) from  to serve as input for next analyses
-# For all individuals : we need bed file for input to Admixture and .raw format for input in R adegenet
+### For all individuals : we need bed file for input to Admixture and .raw format for input in R adegenet
 bash final_data.sh path/to/input.vcf path/to/output_directory
-# For pairs of populations : we need bed files for input in R pcadapt
+### For pairs of populations : we need bed files for input in R pcadapt
 You first need to list indivduals in pairs of populations in txt files and store them in a folder that will serve as output directory in the next script.
 bash pairs.sh path/to/input.vcf path/to/output_directory
 
 ## Admixture
-# run cross validation for choosing K
+### run cross validation for choosing K
 cd admixture
 for K in {1..23}; do admixture --cv ../path/to/filtered.pruned.norep.nohet.noclones.bed $K | tee log${K}.out; done
-# visualize CV errors
+### visualize CV errors
 grep -h CV log*.out
 
 ## VCF statistics
-## output stats of final vcf
+### output stats of final vcf
 IN_VCF=path/to/filtered.pruned.norep.nohet.noclones.vcf
 for i in {"depth","site-mean-depth"}; do name=`basename $IN_VCF .recode.vcf`; vcftools --vcf $IN_VCF --$i --out $name; done 
 
