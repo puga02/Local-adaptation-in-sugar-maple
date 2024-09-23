@@ -40,9 +40,18 @@ The second round of filtering consists in : i) removing replicated individuals t
   Check in out.relatedness2 for pairs of distinct individuals that have relatedness_phi value > 0.4. Make a list of putative clones and remove it from VCF
   vcftools --vcf filtered.pruned.norep.nohet.recode.vcf --remove clones.txt --out filtered.pruned.norep.nohet.noclones --recode --remove-filtered-all
 
-## Output final datasets (filtered.pruned.norep.nohet.noclones.vcf) from  to serve as input for next analyses
-### For all individuals : we need bed file for input to Admixture and .raw format for input in R adegenet
+## Output final datasets from filtered.pruned.norep.nohet.noclones.vcf to serve as input for next analyses
+### For all individuals : export in .raw format for input in R adegenet
 bash final_data.sh path/to/input.vcf path/to/output_directory
+
+## Basic genetic statistics in R 
+Follow the three first chunks of Local_adapt_script_Rmd
+
+## Filter VCF for SNPs with Fis = 1 
+During the basic statistic calculation steps, we created a snps2keep.txt. Make the correspondance between the name of the SNP and the chromosom and position to create a file with two tab-separated columns, no header : CHROM  POS.
+ vcftools --vcf filtered.pruned.norep.nohet.noclones.recode.vcf --positions snps2keep.txt --out filtered.pruned.norep.nohet.noclones.nohoms --recode --remove-filtered-all
+then run the final_data.sh script again but on the latest created VCF filtered.pruned.norep.nohet.noclones.nohoms.recode.vcf
+
 ### For pairs of populations : we need bed files for input in R pcadapt
 You first need to list indivduals in pairs of populations in txt files and store them in a folder that will serve as output directory in the next script.
 bash pairs.sh path/to/input.vcf path/to/output_directory
@@ -50,16 +59,16 @@ bash pairs.sh path/to/input.vcf path/to/output_directory
 ## Admixture
 ### run cross validation for choosing K
 cd admixture
-for K in {1..23}; do admixture --cv ../path/to/filtered.pruned.norep.nohet.noclones.bed $K | tee log${K}.out; done
+for K in {1..23}; do admixture --cv ../path/to/filtered.pruned.norep.nohet.noclones.nohoms.bed $K | tee log${K}.out; done
 ### visualize CV errors
 grep -h CV log*.out
 
 ## VCF statistics
 ### output stats of final vcf
-IN_VCF=path/to/filtered.pruned.norep.nohet.noclones.vcf
+IN_VCF=path/to/filtered.pruned.norep.nohet.noclones.nohoms.vcf
 for i in {"depth","site-mean-depth"}; do name=`basename $IN_VCF .recode.vcf`; vcftools --vcf $IN_VCF --$i --out $name; done 
 
-## Genetic statistics (He, Ho, Fis), PCA, admixture composition plots, Fst calculations and Mantel test, DAPC, pcadapt and RDA
+## PCA, admixture composition plots, Fst calculations and Mantel test, DAPC, pcadapt and RDA
 Follow Rmarkdown
 
 ## Candidate lists
